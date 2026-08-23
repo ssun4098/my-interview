@@ -1,0 +1,297 @@
+/* =============================================================================
+   my-interview — global styles (spec 004)
+   Dark canvas + Toss blue primary + chunky rounded containers.
+   Anchors: Toss · Naver Webtoon · Telegram.
+   Layout: collapsible left sidebar (desktop) / drawer (mobile).
+   Motion: handled by `motion` (formerly framer-motion) — see lib/motion.js.
+   ========================================================================== */
+
+:root {
+  /* --- Brand ---------------------------------------------------------- */
+  --color-primary: #3182F6;          /* Toss blue */
+  --color-primary-hover: #4E97F7;
+  --color-primary-active: #1B6FDB;
+  --color-primary-tint: rgba(49, 130, 246, 0.14);
+
+  /* --- Canvas & surfaces (dark) --------------------------------------- */
+  --color-canvas: #0F1218;
+  --color-bg-page: #0F1218;
+  --color-bg-surface: #1A1F2E;       /* raised — cards, sidebar */
+  --color-bg-elevated: #252B3D;      /* modal, sheet, popover */
+  --color-bg-subtle: rgba(255, 255, 255, 0.05);
+  --color-bg-pressed: rgba(255, 255, 255, 0.10);
+  --color-bg-inverse: #F0F1F5;
+
+  /* --- Text ----------------------------------------------------------- */
+  --color-ink: #F0F1F5;
+  --color-fg-1: #F0F1F5;              /* main text — soft white */
+  --color-fg-2: #B0B5C0;              /* body */
+  --color-fg-3: #6E7383;              /* muted, caption */
+  --color-fg-4: rgba(255, 255, 255, 0.28);
+  --color-fg-inverse: #0F1218;
+
+  /* --- Borders (subtle white overlays) --------------------------------- */
+  --color-border-1: rgba(255, 255, 255, 0.06);
+  --color-border-2: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.24);
+
+  /* --- Semantic -------------------------------------------------------- */
+  --color-danger: #F04452;
+  --color-danger-tint: rgba(240, 68, 82, 0.14);
+  --color-red: #F04452;              /* alias for backward compat */
+  --color-red-tint: rgba(240, 68, 82, 0.14);
+  --color-success: #00C853;
+  --color-success-tint: rgba(0, 200, 83, 0.14);
+  --color-link: #4E97F7;
+
+  /* --- Typography ------------------------------------------------------ */
+  --font-body: 'Pretendard Variable', Pretendard, -apple-system,
+    'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+
+  /* --- Spacing (4px base, 12-step) — retain numeric aliases ------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* --- Rounded (chunky — Toss/Telegram/Webtoon) ------------------------ */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;    /* buttons, inputs */
+  --radius-lg: 16px;    /* cards */
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-sheet: 20px; /* mobile bottom sheet */
+  --radius-pill: 9999px;
+  --radius-circle: 50%;
+
+  /* --- Elevation (dark: color/border first, shadow rare) --------------- */
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --glow-primary: 0 0 0 3px rgba(49, 130, 246, 0.28);
+
+  /* --- Animation (motion library handles most; CSS still for a few) ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 400ms;
+
+  /* --- App layout ------------------------------------------------------ */
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
+  --mobile-topbar-h: 52px;
+  --content-max: 1200px;
+}
+
+/* --- Reset & base -------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  color: var(--color-fg-2);
+  background: var(--color-bg-page);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  font-size: 16px;              /* iOS Safari: <16px triggers zoom on focus */
+}
+@media (min-width: 641px) {
+  input,
+  textarea,
+  select {
+    font-size: 15px;
+  }
+}
+
+/* --- Typography (chunky headlines, dark-friendly weight) ---------------- */
+h1,
+h2,
+h3 {
+  font-family: var(--font-body);
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+.muted {
+  color: var(--color-fg-3);
+  font-size: 13px;
+}
+
+/* --- Global interaction feedback ---------------------------------------- */
+/* NOTE: Button press feedback is handled by motion (whileTap), not CSS.
+   We keep basic transitions for a[href] hover. */
+a[href] {
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+button:focus-visible,
+a[href]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* --- Skeleton pulse (Skeleton component) -------------------------------- */
+.skeleton {
+  background: rgba(255, 255, 255, 0.08);
+  animation: pulse 1500ms ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* --- Sidebar layout (structure unchanged, colors flip via tokens) ------- */
+
+.sidebar {
+  width: 84vw;
+  max-width: 320px;
+  /* NOTE: transform + backdrop are now motion-driven on mobile.
+     CSS fallback: keep transform for pre-hydration frame. */
+  transform: translateX(-100%);
+}
+.sidebar[data-mobile-open='true'] {
+  transform: translateX(0);
+  box-shadow: var(--shadow-3);
+}
+.mobile-topbar {
+  display: flex !important;
+}
+.sidebar-mobile-close {
+  display: inline-flex !important;
+}
+.sidebar-desktop-toggle {
+  display: none !important;
+}
+
+.app-main {
+  padding-top: var(--space-5);
+}
+.app-layout.with-sidebar .app-main {
+  padding-top: calc(var(--mobile-topbar-h) + var(--space-4));
+}
+
+@media (min-width: 641px) {
+  .sidebar {
+    width: var(--sidebar-w);
+    max-width: none;
+    transform: translateX(0);
+    box-shadow: none;
+    /* Desktop collapse width animation stays CSS (motion width causes layout thrash) */
+    transition: width var(--dur-base) var(--ease-out);
+  }
+  .sidebar[data-collapsed='true'] {
+    width: var(--sidebar-w-collapsed);
+  }
+  .mobile-topbar {
+    display: none !important;
+  }
+  .sidebar-mobile-close {
+    display: none !important;
+  }
+  .sidebar-desktop-toggle {
+    display: inline-flex !important;
+  }
+
+  .app-layout.with-sidebar .app-main {
+    margin-left: var(--sidebar-w);
+    padding-top: var(--space-6);
+    transition: margin-left var(--dur-base) var(--ease-out);
+  }
+  .app-layout.with-sidebar[data-sidebar-collapsed='true'] .app-main {
+    margin-left: var(--sidebar-w-collapsed);
+  }
+}
+
+/* --- prefers-reduced-motion: MotionConfig handles motion library;
+   CSS-only fallbacks here for pulse/smooth-scroll ---------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

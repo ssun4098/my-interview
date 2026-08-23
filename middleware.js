@@ -1,0 +1,66 @@
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+
+const PUBLIC_PATHS = ['/login', '/signup'];
+
+export async function middleware(request) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+  const isPublic = PUBLIC_PATHS.includes(pathname);
+
+  if (!user) {
+    if (isPublic) return response;
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isPublic) {
+    return response;
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_approved')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile || profile.is_approved !== true) {
+    await supabase.auth.signOut();
+    const revokedUrl = new URL('/login', request.url);
+    revokedUrl.searchParams.set('revoked', '1');
+    return NextResponse.redirect(revokedUrl);
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+};
