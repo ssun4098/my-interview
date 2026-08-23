@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(powershell -ExecutionPolicy Bypass -File \".specify/extensions/git/scripts/powershell/initialize-repo.ps1\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-plan.ps1\" -Json)"
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-plan.ps1\" -Json)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

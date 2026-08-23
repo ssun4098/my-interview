@@ -42,6 +42,12 @@ export async function middleware(request) {
   }
 
   if (isPublic) {
+    // Already-authenticated users hitting /login or /signup (e.g. a home
+    // screen shortcut saved from the login page) should land in the app,
+    // not see the login form again.
+    if (request.method === 'GET') {
+      return NextResponse.redirect(new URL('/sets', request.url));
+    }
     return response;
   }
 
