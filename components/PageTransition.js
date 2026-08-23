@@ -59,7 +59,7 @@ export default function PageTransition({ children }) {
         animate={variants.animate}
         exit={variants.exit}
         transition={transition}
-        style={{ width: '100%' }}
+        style={{ width: '100%', position: 'relative', background: 'var(--color-bg-page)' }}
       >
         {children}
       </motion.div>

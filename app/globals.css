@@ -243,6 +243,8 @@ select:focus-visible {
 
 .app-main {
   padding-top: var(--space-5);
+  position: relative;
+  overflow-x: hidden;
 }
 .app-layout.with-sidebar .app-main {
   padding-top: calc(var(--mobile-topbar-h) + var(--space-4));
