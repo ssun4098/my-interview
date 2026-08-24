@@ -96,8 +96,7 @@ export default function StudyView({ questions, mode, initialIndex = 0, backHref 
               display: 'flex',
               flexDirection: 'column',
               gap: 'var(--space-4)',
-              minHeight: 240,
-              maxHeight: 'calc(100dvh - 260px)',
+              height: 'clamp(360px, calc(100dvh - 220px), 720px)',
               overflowY: 'auto',
               overscrollBehavior: 'contain',
             }}
