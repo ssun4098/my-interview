@@ -134,3 +134,66 @@ export function ChevronLeftIcon({ size = 24 }) {
     </svg>
   );
 }
+
+export function BoldIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <path d="M6 4h6a3.5 3.5 0 0 1 0 7H6zM6 11h7a3.5 3.5 0 0 1 0 7H6z" />
+    </svg>
+  );
+}
+
+export function ItalicIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <line x1="12" y1="4" x2="9" y2="20" />
+      <line x1="14" y1="4" x2="17" y2="4" />
+      <line x1="6" y1="20" x2="9" y2="20" />
+    </svg>
+  );
+}
+
+export function ListIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <line x1="9" y1="6" x2="21" y2="6" />
+      <line x1="9" y1="12" x2="21" y2="12" />
+      <line x1="9" y1="18" x2="21" y2="18" />
+      <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function ListOrderedIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <line x1="10" y1="6" x2="21" y2="6" />
+      <line x1="10" y1="12" x2="21" y2="12" />
+      <line x1="10" y1="18" x2="21" y2="18" />
+      <text x="1" y="9" fontSize="7" fill="currentColor" stroke="none">1</text>
+      <text x="1" y="15" fontSize="7" fill="currentColor" stroke="none">2</text>
+      <text x="1" y="21" fontSize="7" fill="currentColor" stroke="none">3</text>
+    </svg>
+  );
+}
+
+export function CodeIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+export function ImageIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}

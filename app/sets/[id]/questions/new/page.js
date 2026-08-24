@@ -10,7 +10,7 @@ export default function NewQuestionPage({ params }) {
     <>
       <h1 style={{ marginBottom: 'var(--space-5)' }}>새 문제</h1>
       <Card padding="var(--space-5)">
-        <QuestionForm action={boundCreate} submitLabel="추가" />
+        <QuestionForm action={boundCreate} setId={id} submitLabel="추가" />
       </Card>
     </>
   );

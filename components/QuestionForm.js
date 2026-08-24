@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import Button from '@/components/Button';
 import TextField from '@/components/TextField';
 import KeywordInput from '@/components/KeywordInput';
+import RichTextEditor from '@/components/RichTextEditor';
 
 const initialState = { error: null };
 
@@ -18,6 +19,7 @@ function SubmitButton({ label, pendingLabel }) {
 
 export default function QuestionForm({
   action,
+  setId,
   initialValues,
   submitLabel = '저장',
 }) {
@@ -43,14 +45,16 @@ export default function QuestionForm({
         required
       />
 
-      <TextField
-        as="textarea"
-        label="내용"
-        name="content"
-        defaultValue={initialValues?.content ?? ''}
-        maxLength={5000}
-        rows={8}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-fg-2)' }}>
+          내용
+        </span>
+        <RichTextEditor
+          name="content"
+          setId={setId}
+          initialValue={initialValues?.content ?? ''}
+        />
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-fg-2)' }}>

@@ -104,15 +104,14 @@ export default function StudyView({ questions, mode, initialIndex = 0, backHref 
             {showBody ? (
               <>
                 <div
+                  className="rich-content"
                   style={{
-                    whiteSpace: 'pre-wrap',
                     fontSize: 15,
                     lineHeight: 1.65,
                     color: 'var(--color-fg-2)',
                   }}
-                >
-                  {question.content}
-                </div>
+                  dangerouslySetInnerHTML={{ __html: question.content }}
+                />
                 {question.keywords && question.keywords.length > 0 && (
                   <div
                     aria-label="키워드"

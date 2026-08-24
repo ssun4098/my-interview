@@ -23,6 +23,7 @@ export default async function EditQuestionPage({ params }) {
       <Card padding="var(--space-5)">
         <QuestionForm
           action={boundUpdate}
+          setId={id}
           initialValues={question}
           submitLabel="저장"
         />
