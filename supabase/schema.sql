@@ -1,6 +1,7 @@
 -- =============================================================================
 -- my-interview  |  Supabase schema (Postgres + Row Level Security)
--- Features: 001-question-viewer + 002-signup-approval-redesign
+-- Features: 001-question-viewer + 002-signup-approval-redesign +
+--           005-question-file-uploads
 --
 -- How to apply:
 --   1. Open your Supabase project → SQL Editor → New query.
@@ -14,6 +15,8 @@
 --   - RLS:      enabled on all three tables; policies enforce ownership,
 --               public/private visibility, AND approved-user gating on the
 --               domain tables (question_sets, questions).
+--   - Storage:  private `question-files` bucket (rich-text editor image
+--               uploads) with RLS policies mirroring the questions table.
 --
 -- ONE-TIME BACKFILL FOR 002 MIGRATION
 --   The 002 migration adds `is_approved` with default `false`. To keep the
@@ -90,6 +93,14 @@ alter table public.questions enable row level security;
 
 create index if not exists questions_set_created_idx
     on public.questions (question_set_id, created_at);
+
+-- 005 migration: content is now Tiptap-authored HTML (rich text + inline
+-- images), not plain text, so it needs more headroom than the original
+-- 5000-char plain-text limit.
+alter table public.questions
+    drop constraint if exists questions_content_len_chk;
+alter table public.questions
+    add constraint questions_content_len_chk check (char_length(content) between 0 and 20000);
 
 
 -- -----------------------------------------------------------------------------
@@ -277,6 +288,84 @@ create policy questions_delete on public.questions
         and exists (
             select 1 from public.question_sets s
             where s.id = questions.question_set_id
+              and s.owner_id = auth.uid()
+        )
+    );
+
+
+-- -----------------------------------------------------------------------------
+-- 005: question-files Storage bucket
+-- Holds images embedded in the question content rich-text editor. The
+-- bucket is PRIVATE — objects are served through app/files/[...path]/route.js,
+-- which resolves a fresh short-lived signed URL per request after Supabase
+-- checks the caller against the RLS policies below. This keeps question
+-- content's embedded <img src="/files/..."> URLs stable forever (they never
+-- need to be rewritten), while access still tracks question_sets.is_public
+-- exactly like the questions table does.
+--
+-- Object path convention: `{question_set_id}/{random-filename}`, enforced by
+-- lib/storage.js on upload and relied on below via storage.foldername().
+-- -----------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+    'question-files',
+    'question-files',
+    false,
+    5242880, -- 5MB
+    array['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+)
+on conflict (id) do update
+set file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists question_files_select on storage.objects;
+create policy question_files_select on storage.objects
+    for select
+    to authenticated
+    using (
+        bucket_id = 'question-files'
+        and exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = ((storage.foldername(name))[1])::uuid
+              and (s.owner_id = auth.uid() or s.is_public = true)
+        )
+    );
+
+drop policy if exists question_files_insert on storage.objects;
+create policy question_files_insert on storage.objects
+    for insert
+    to authenticated
+    with check (
+        bucket_id = 'question-files'
+        and exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = ((storage.foldername(name))[1])::uuid
+              and s.owner_id = auth.uid()
+        )
+    );
+
+drop policy if exists question_files_delete on storage.objects;
+create policy question_files_delete on storage.objects
+    for delete
+    to authenticated
+    using (
+        bucket_id = 'question-files'
+        and exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = ((storage.foldername(name))[1])::uuid
               and s.owner_id = auth.uid()
         )
     );
