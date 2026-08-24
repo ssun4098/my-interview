@@ -97,6 +97,9 @@ export default function StudyView({ questions, mode, initialIndex = 0, backHref 
               flexDirection: 'column',
               gap: 'var(--space-4)',
               minHeight: 240,
+              maxHeight: 'calc(100dvh - 260px)',
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
             }}
           >
             <h2 style={{ fontSize: 20, lineHeight: 1.35 }}>{question.title}</h2>
