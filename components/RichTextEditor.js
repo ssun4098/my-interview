@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { createBrowserSupabase } from '@/lib/supabase-browser';
 import {
   QUESTION_FILES_BUCKET,
@@ -19,6 +23,7 @@ import {
   ListOrderedIcon,
   CodeIcon,
   ImageIcon,
+  TableIcon,
 } from '@/components/icons';
 
 function ToolbarButton({ active, onClick, label, children }) {
@@ -57,6 +62,16 @@ export default function RichTextEditor({ name, setId, initialValue = '' }) {
     extensions: [
       StarterKit,
       Image.configure({ HTMLAttributes: { class: 'rich-content-image' } }),
+      Table.configure({
+        resizable: false,
+        handleWidth: 5,
+        cellMinWidth: 50,
+        lastColumnResizable: true,
+        allowTableNodeSelection: false,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: initialValue,
     immediatelyRender: false,
@@ -179,6 +194,14 @@ export default function RichTextEditor({ name, setId, initialValue = '' }) {
           onClick={() => fileInputRef.current?.click()}
         >
           <ImageIcon size={16} />
+        </ToolbarButton>
+        <div style={{ width: 1, height: 24, background: 'var(--color-border-2)', margin: '0 4px' }} />
+        <ToolbarButton
+          label="표 삽입"
+          active={false}
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        >
+          <TableIcon size={16} />
         </ToolbarButton>
         {uploading && (
           <span style={{ fontSize: 12, color: 'var(--color-fg-3)', marginLeft: 4 }}>
