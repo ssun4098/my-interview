@@ -52,10 +52,213 @@ function ToolbarButton({ active, onClick, label, children }) {
   );
 }
 
+function TableMenu({ editor, isInTable }) {
+  const [open, setOpen] = useState(false);
+
+  if (!isInTable) return null;
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setOpen(!open)}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: 'var(--radius-sm)',
+          border: 'none',
+          background: open ? 'var(--color-primary-tint)' : 'transparent',
+          color: open ? 'var(--color-primary)' : 'var(--color-fg-2)',
+          cursor: 'pointer',
+          fontSize: 12,
+          fontWeight: 600,
+        }}
+        aria-label="표 옵션"
+      >
+        ⋯
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 36,
+            left: 0,
+            zIndex: 1000,
+            background: 'var(--color-bg-elevated)',
+            border: '1px solid var(--color-border-2)',
+            borderRadius: 'var(--radius-md)',
+            minWidth: 160,
+            boxShadow: 'var(--shadow-2)',
+          }}
+        >
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().addRowAfter().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            행 추가 (아래)
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().addRowBefore().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            행 추가 (위)
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().deleteRow().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-danger)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            행 삭제
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().addColumnAfter().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            열 추가 (오른쪽)
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().addColumnBefore().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            열 추가 (왼쪽)
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().deleteColumn().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-danger)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+              borderBottom: '1px solid var(--color-border-1)',
+            }}
+          >
+            열 삭제
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor.chain().focus().deleteTable().run();
+              setOpen(false);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: 'var(--space-2) var(--space-3)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-danger)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 13,
+            }}
+          >
+            표 삭제
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RichTextEditor({ name, setId, initialValue = '' }) {
   const [html, setHtml] = useState(initialValue);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [isInTable, setIsInTable] = useState(false);
   const fileInputRef = useRef(null);
 
   const editor = useEditor({
@@ -75,7 +278,13 @@ export default function RichTextEditor({ name, setId, initialValue = '' }) {
     ],
     content: initialValue,
     immediatelyRender: false,
-    onUpdate: ({ editor: ed }) => setHtml(ed.getHTML()),
+    onUpdate: ({ editor: ed }) => {
+      setHtml(ed.getHTML());
+      setIsInTable(ed.isActive('table'));
+    },
+    onSelectionUpdate: ({ editor: ed }) => {
+      setIsInTable(ed.isActive('table'));
+    },
     editorProps: {
       attributes: { class: 'rich-content rich-editor-content' },
       handleDrop(view, event) {
@@ -196,13 +405,18 @@ export default function RichTextEditor({ name, setId, initialValue = '' }) {
           <ImageIcon size={16} />
         </ToolbarButton>
         <div style={{ width: 1, height: 24, background: 'var(--color-border-2)', margin: '0 4px' }} />
-        <ToolbarButton
-          label="표 삽입"
-          active={false}
-          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-        >
-          <TableIcon size={16} />
-        </ToolbarButton>
+        {!isInTable && (
+          <ToolbarButton
+            label="표 삽입"
+            active={false}
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          >
+            <TableIcon size={16} />
+          </ToolbarButton>
+        )}
+        {isInTable && (
+          <TableMenu editor={editor} isInTable={isInTable} />
+        )}
         {uploading && (
           <span style={{ fontSize: 12, color: 'var(--color-fg-3)', marginLeft: 4 }}>
             업로드 중…
