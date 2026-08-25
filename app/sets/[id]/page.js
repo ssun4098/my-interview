@@ -6,6 +6,7 @@ import { deleteQuestion } from '@/lib/question-actions';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Chip from '@/components/Chip';
+import QuestionsList from '@/components/QuestionsList';
 import ConfirmDeleteForm from '@/components/ConfirmDeleteForm';
 import { EditIcon, TrashIcon, PlusIcon } from '@/components/icons';
 
@@ -29,9 +30,9 @@ export default async function SetDetailPage({ params }) {
 
   const { data: questions } = await supabase
     .from('questions')
-    .select('id, title, keywords, created_at')
+    .select('id, title, keywords, created_at, "order"')
     .eq('question_set_id', id)
-    .order('created_at', { ascending: true });
+    .order('"order"', { ascending: true });
 
   const deleteSetBound = deleteSet.bind(null, id);
 
@@ -119,76 +120,12 @@ export default async function SetDetailPage({ params }) {
         )}
       </div>
 
-      {!questions || questions.length === 0 ? (
-        <Card padding="var(--space-5)" style={{ textAlign: 'center' }}>
-          <p className="muted">아직 문제가 없습니다.</p>
-        </Card>
-      ) : (
-        <ul
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-2)',
-          }}
-        >
-          {questions.map((q, idx) => (
-            <li key={q.id}>
-              <Card
-                padding="var(--space-3) var(--space-4)"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 'var(--space-3)',
-                }}
-              >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: 'var(--color-fg-1)',
-                    }}
-                  >
-                    <span
-                      style={{ color: 'var(--color-fg-3)', marginRight: 6, fontWeight: 500 }}
-                    >
-                      {idx + 1}.
-                    </span>
-                    {q.title}
-                  </div>
-                  {q.keywords && q.keywords.length > 0 && (
-                    <div className="muted" style={{ marginTop: 2, fontSize: 12 }}>
-                      키워드 {q.keywords.length}개
-                    </div>
-                  )}
-                </div>
-                {isOwner && (
-                  <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-                    <Link
-                      href={`/sets/${id}/questions/${q.id}/edit`}
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <Button variant="ghost" size="sm">
-                        <EditIcon size={14} />
-                      </Button>
-                    </Link>
-                    <ConfirmDeleteForm
-                      action={deleteQuestion.bind(null, id, q.id)}
-                      confirmMessage="이 문제를 삭제할까요?"
-                    >
-                      <TrashIcon size={14} />
-                    </ConfirmDeleteForm>
-                  </div>
-                )}
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+      <QuestionsList
+        setId={id}
+        questions={questions ?? []}
+        isOwner={isOwner}
+        deleteQuestionBound={deleteQuestion.bind(null, id)}
+      />
     </>
   );
 }
