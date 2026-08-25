@@ -124,7 +124,6 @@ export default async function SetDetailPage({ params }) {
         setId={id}
         questions={questions ?? []}
         isOwner={isOwner}
-        deleteQuestionBound={deleteQuestion.bind(null, id)}
       />
     </>
   );

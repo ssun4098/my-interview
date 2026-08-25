@@ -4,15 +4,29 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import ConfirmDeleteForm from '@/components/ConfirmDeleteForm';
 import { EditIcon, TrashIcon } from '@/components/icons';
-import { updateQuestionsOrder } from '@/lib/question-actions';
+import { updateQuestionsOrder, deleteQuestion } from '@/lib/question-actions';
 
-export default function QuestionsList({ setId, questions, isOwner, deleteQuestionBound }) {
+export default function QuestionsList({ setId, questions, isOwner }) {
   const [items, setItems] = useState(questions);
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const dragOverIdx = useRef(null);
+
+  async function handleDeleteQuestion(questionId) {
+    if (!confirm('이 문제를 삭제할까요?')) {
+      return;
+    }
+
+    try {
+      await deleteQuestion(setId, questionId);
+      // 삭제 성공 후 UI에서 제거
+      setItems(items.filter(q => q.id !== questionId));
+    } catch (error) {
+      console.error('문제 삭제 실패:', error);
+      alert('삭제에 실패했습니다.');
+    }
+  }
 
   async function handleDragEnd() {
     setDraggedIdx(null);
@@ -148,12 +162,14 @@ export default function QuestionsList({ setId, questions, isOwner, deleteQuestio
                           <EditIcon size={14} />
                         </Button>
                       </Link>
-                      <ConfirmDeleteForm
-                        action={deleteQuestionBound.bind(null, q.id)}
-                        confirmMessage="이 문제를 삭제할까요?"
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        type="button"
+                        onClick={() => handleDeleteQuestion(q.id)}
                       >
                         <TrashIcon size={14} />
-                      </ConfirmDeleteForm>
+                      </Button>
                     </div>
                   )}
                 </Card>
