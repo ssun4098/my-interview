@@ -114,16 +114,16 @@ export default function StudyView({ questions, mode, initialIndex = 0, backHref 
                   }}
                   dangerouslySetInnerHTML={{ __html: question.content }}
                 />
-                {question.keywords && question.keywords.length > 0 && (
-                  <div
-                    aria-label="키워드"
-                    style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}
-                  >
-                    {question.keywords.map((k, i) => (
+                {(question.categories && question.categories.length > 0) || (question.keywords && question.keywords.length > 0) ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', paddingTop: 'var(--space-2)' }}>
+                    {question.categories && question.categories.map(cat => (
+                      <Chip key={cat.id} label={cat.name} variant="default" />
+                    ))}
+                    {question.keywords && question.keywords.map((k, i) => (
                       <Chip key={`${k}-${i}`} label={k} variant="primary" />
                     ))}
                   </div>
-                )}
+                ) : null}
               </>
             ) : (
               <div>

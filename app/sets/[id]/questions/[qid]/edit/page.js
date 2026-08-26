@@ -7,13 +7,19 @@ import { updateQuestion } from '@/lib/question-actions';
 export default async function EditQuestionPage({ params }) {
   const { id, qid } = params;
   const supabase = createServerSupabase();
-  const { data: question } = await supabase
+  const { data: questionData } = await supabase
     .from('questions')
-    .select('id, title, content, keywords')
+    .select('id, title, content, keywords, question_categories ( categories ( id, name ) )')
     .eq('id', qid)
     .maybeSingle();
 
-  if (!question) notFound();
+  if (!questionData) notFound();
+
+  // 카테고리 구조 정규화
+  const question = {
+    ...questionData,
+    categories: questionData.question_categories?.map(qc => qc.categories) ?? [],
+  };
 
   const boundUpdate = updateQuestion.bind(null, id, qid);
 

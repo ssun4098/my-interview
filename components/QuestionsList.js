@@ -145,11 +145,31 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                         </span>
                         {q.title}
                       </div>
-                      {q.keywords && q.keywords.length > 0 && (
-                        <div className="muted" style={{ marginTop: 2, fontSize: 12 }}>
-                          키워드 {q.keywords.length}개
-                        </div>
-                      )}
+                      <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
+                        {q.categories && q.categories.length > 0 && (
+                          q.categories.map(cat => (
+                            <span
+                              key={cat.id}
+                              style={{
+                                display: 'inline-block',
+                                padding: '2px 6px',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'var(--color-primary-tint)',
+                                color: 'var(--color-primary)',
+                                fontSize: 11,
+                                fontWeight: 500,
+                              }}
+                            >
+                              {cat.name}
+                            </span>
+                          ))
+                        )}
+                        {q.keywords && q.keywords.length > 0 && (
+                          <span className="muted" style={{ fontSize: 11, marginLeft: 'auto' }}>
+                            키워드 {q.keywords.length}개
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {isOwner && (

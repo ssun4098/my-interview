@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import Button from '@/components/Button';
 import TextField from '@/components/TextField';
 import KeywordInput from '@/components/KeywordInput';
+import CategoryInput from '@/components/CategoryInput';
 import RichTextEditor from '@/components/RichTextEditor';
 
 const initialState = { error: null };
@@ -54,6 +55,13 @@ export default function QuestionForm({
           setId={setId}
           initialValue={initialValues?.content ?? ''}
         />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-fg-2)' }}>
+          카테고리
+        </span>
+        <CategoryInput initial={initialValues?.categories ?? []} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

@@ -28,11 +28,17 @@ export default async function SetDetailPage({ params }) {
 
   const isOwner = user && set.owner_id === user.id;
 
-  const { data: questions } = await supabase
+  const { data: questionsData } = await supabase
     .from('questions')
-    .select('id, title, keywords, created_at, "order"')
+    .select('id, title, keywords, created_at, "order", question_categories ( categories ( id, name ) )')
     .eq('question_set_id', id)
     .order('"order"', { ascending: true });
+
+  // 카테고리 구조 정규화
+  const questions = questionsData?.map(q => ({
+    ...q,
+    categories: q.question_categories?.map(qc => qc.categories) ?? [],
+  })) ?? [];
 
   const deleteSetBound = deleteSet.bind(null, id);
 
