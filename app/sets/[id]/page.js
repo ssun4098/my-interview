@@ -18,13 +18,19 @@ export default async function SetDetailPage({ params }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: set } = await supabase
+  const { data: setData } = await supabase
     .from('question_sets')
-    .select('id, title, is_public, owner_id, owner:profiles ( username )')
+    .select('id, title, is_public, owner_id, owner:profiles ( username ), question_set_categories ( categories ( id, name ) )')
     .eq('id', id)
     .maybeSingle();
 
-  if (!set) notFound();
+  if (!setData) notFound();
+
+  // 카테고리 구조 정규화
+  const set = {
+    ...setData,
+    categories: setData.question_set_categories?.map(qsc => qsc.categories) ?? [],
+  };
 
   const isOwner = user && set.owner_id === user.id;
 
@@ -60,6 +66,26 @@ export default async function SetDetailPage({ params }) {
             variant={set.is_public ? 'mint' : 'default'}
           />
         </div>
+        {set.categories && set.categories.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)', marginBottom: 'var(--space-2)' }}>
+            {set.categories.map(cat => (
+              <span
+                key={cat.id}
+                style={{
+                  display: 'inline-block',
+                  padding: '4px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-primary-tint)',
+                  color: 'var(--color-primary)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                {cat.name}
+              </span>
+            ))}
+          </div>
+        )}
         {!isOwner && (
           <p className="muted">by {set.owner?.username ?? '알 수 없음'}</p>
         )}

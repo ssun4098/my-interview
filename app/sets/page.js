@@ -7,10 +7,16 @@ import { PlusIcon, ChevronRightIcon } from '@/components/icons';
 
 export default async function MySetsPage() {
   const supabase = createServerSupabase();
-  const { data: sets } = await supabase
+  const { data: setsData } = await supabase
     .from('question_sets')
-    .select('id, title, is_public, created_at')
+    .select('id, title, is_public, created_at, question_set_categories ( categories ( id, name ) )')
     .order('created_at', { ascending: false });
+
+  // 카테고리 구조 정규화
+  const sets = setsData?.map(s => ({
+    ...s,
+    categories: s.question_set_categories?.map(qsc => qsc.categories) ?? [],
+  })) ?? [];
 
   return (
     <>
@@ -90,7 +96,27 @@ export default async function MySetsPage() {
                         variant={s.is_public ? 'mint' : 'default'}
                       />
                     </div>
-                    <span className="muted" style={{ fontSize: 12 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)', marginTop: 2 }}>
+                      {s.categories && s.categories.length > 0 && (
+                        s.categories.map(cat => (
+                          <span
+                            key={cat.id}
+                            style={{
+                              display: 'inline-block',
+                              padding: '2px 6px',
+                              borderRadius: 'var(--radius-sm)',
+                              background: 'var(--color-primary-tint)',
+                              color: 'var(--color-primary)',
+                              fontSize: 11,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {cat.name}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                    <span className="muted" style={{ fontSize: 12, marginTop: 2 }}>
                       {new Date(s.created_at).toLocaleDateString('ko-KR')}
                     </span>
                   </div>

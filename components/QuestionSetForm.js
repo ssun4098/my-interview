@@ -3,6 +3,7 @@
 import { useFormState, useFormStatus } from 'react-dom';
 import Button from '@/components/Button';
 import TextField from '@/components/TextField';
+import CategoryInput from '@/components/CategoryInput';
 
 const initialState = { error: null };
 
@@ -64,6 +65,13 @@ export default function QuestionSetForm({
         />
         공개 문제집 (다른 로그인 사용자도 볼 수 있음)
       </label>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-fg-2)' }}>
+          카테고리
+        </span>
+        <CategoryInput initial={initialValues?.categories ?? []} />
+      </div>
 
       {state?.error && (
         <div

@@ -7,13 +7,19 @@ import { updateSet } from '@/lib/set-actions';
 export default async function EditSetPage({ params }) {
   const { id } = params;
   const supabase = createServerSupabase();
-  const { data: set } = await supabase
+  const { data: setData } = await supabase
     .from('question_sets')
-    .select('id, title, is_public')
+    .select('id, title, is_public, question_set_categories ( categories ( id, name ) )')
     .eq('id', id)
     .maybeSingle();
 
-  if (!set) notFound();
+  if (!setData) notFound();
+
+  // 카테고리 구조 정규화
+  const set = {
+    ...setData,
+    categories: setData.question_set_categories?.map(qsc => qsc.categories) ?? [],
+  };
 
   const boundUpdate = updateSet.bind(null, id);
 
