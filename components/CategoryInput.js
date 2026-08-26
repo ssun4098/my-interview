@@ -217,7 +217,7 @@ export default function CategoryInput({ initial = [] }) {
             ) : filteredCategories.length === 0 ? (
               newCategoryName.trim() ? (
                 <div style={{ padding: 'var(--space-3)', fontSize: 13, color: 'var(--color-fg-3)' }}>
-                  '{newCategoryName}' 새로 만들기
+                  &quot;{newCategoryName}&quot; 새로 만들기
                 </div>
               ) : (
                 <div style={{ padding: 'var(--space-3)', textAlign: 'center', fontSize: 13, color: 'var(--color-fg-3)' }}>
