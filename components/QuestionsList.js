@@ -77,9 +77,9 @@ export default function QuestionsList({ setId, questions, isOwner }) {
           listStyle: 'none',
           padding: 0,
           margin: 0,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: 'var(--space-3)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-2)',
           opacity: isSaving ? 0.6 : 1,
           transition: 'opacity 200ms',
         }}
@@ -104,40 +104,16 @@ export default function QuestionsList({ setId, questions, isOwner }) {
             }}
           >
             <Card
-              padding="var(--space-4)"
+              padding="var(--space-3) var(--space-4)"
               style={{
                 display: 'flex',
-                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: 'var(--space-3)',
-                height: '100%',
                 background: draggedIdx === idx ? 'var(--color-bg-subtle)' : 'var(--color-bg-surface)',
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 'var(--space-2)',
-                }}
-              >
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: 22,
-                    height: 22,
-                    padding: '0 6px',
-                    borderRadius: 'var(--radius-pill)',
-                    background: 'var(--color-bg-subtle)',
-                    color: 'var(--color-fg-3)',
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                >
-                  {idx + 1}
-                </span>
+              <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 {isOwner && (
                   <div
                     style={{
@@ -145,7 +121,7 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       width: 24,
-                      height: 20,
+                      height: 24,
                       cursor: 'grab',
                       color: 'var(--color-fg-3)',
                       fontSize: 14,
@@ -154,60 +130,56 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                     onMouseDown={(e) => e.preventDefault()}
                     aria-label="드래그하여 순서 변경"
                   >
-                    ⋮⋮
+                    ⋮
                   </div>
                 )}
-              </div>
-
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: 'var(--color-fg-1)',
-                  lineHeight: 1.4,
-                  flex: 1,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
-                {q.title}
-              </div>
-
-              {(q.categories?.length > 0 || q.keywords?.length > 0) && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
-                  {q.categories?.map(cat => (
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-fg-1)',
+                    }}
+                  >
                     <span
-                      key={cat.id}
-                      style={{
-                        display: 'inline-block',
-                        padding: '2px 6px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'var(--color-primary-tint)',
-                        color: 'var(--color-primary)',
-                        fontSize: 11,
-                        fontWeight: 500,
-                      }}
+                      style={{ color: 'var(--color-fg-3)', marginRight: 6, fontWeight: 500 }}
                     >
-                      {cat.name}
+                      {idx + 1}.
                     </span>
-                  ))}
-                  {q.keywords?.length > 0 && (
-                    <span className="muted" style={{ fontSize: 11 }}>
-                      키워드 {q.keywords.length}개
-                    </span>
-                  )}
+                    {q.title}
+                  </div>
+                  <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
+                    {q.categories?.map(cat => (
+                      <span
+                        key={cat.id}
+                        style={{
+                          display: 'inline-block',
+                          padding: '2px 6px',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'var(--color-primary-tint)',
+                          color: 'var(--color-primary)',
+                          fontSize: 11,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {cat.name}
+                      </span>
+                    ))}
+                    {q.keywords?.length > 0 && (
+                      <span className="muted" style={{ fontSize: 11, marginLeft: 'auto' }}>
+                        키워드 {q.keywords.length}개
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-
+              </div>
               {isOwner && (
-                <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'auto', paddingTop: 'var(--space-1)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
                   <Link
                     href={`/sets/${setId}/questions/${q.id}/edit`}
-                    style={{ textDecoration: 'none', flex: 1 }}
+                    style={{ textDecoration: 'none' }}
                   >
-                    <Button variant="ghost" size="sm" fullWidth>
+                    <Button variant="ghost" size="sm">
                       <EditIcon size={14} />
                     </Button>
                   </Link>
@@ -216,7 +188,6 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                     size="sm"
                     type="button"
                     onClick={() => handleDeleteQuestion(q.id)}
-                    fullWidth
                   >
                     <TrashIcon size={14} />
                   </Button>
