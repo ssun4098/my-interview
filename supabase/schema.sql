@@ -403,24 +403,43 @@ alter table public.questions
 
 create index if not exists questions_set_order_idx
     on public.questions (question_set_id, "order");
-
-
 -- ----- categories -------------------------------------------------------------
+-- 모든 승인된 사용자가 공유하는 전역 태그 사전이지만, 행마다 만든 사람(owner_id)을
+-- 기록해 이름 수정/삭제는 소유자만 할 수 있게 합니다. question_sets 와 동일한
+-- 소유권 모델이며, owner_id 는 앱(lib/category-actions.js)이 명시적으로 넣습니다.
 create table if not exists public.categories (
     id          uuid primary key default gen_random_uuid(),
+    owner_id    uuid not null references public.profiles(id) on delete cascade,
     name        text not null,
-    created_by  uuid references public.profiles(id) on delete set null default auth.uid(),
     created_at  timestamptz not null default now(),
     constraint categories_name_len_chk check (char_length(name) between 1 and 50)
 );
 alter table public.categories enable row level security;
 
+-- 손으로 먼저 만들어 둔 테이블과의 정합용 (이미 맞으면 아무 일도 하지 않습니다)
+alter table public.categories
+    add column if not exists owner_id uuid references public.profiles(id) on delete cascade;
+alter table public.categories
+    add column if not exists created_at timestamptz not null default now();
+
+create index if not exists categories_owner_id_idx
+    on public.categories (owner_id);
+
 -- 대소문자만 다른 중복을 막습니다. 위반 시 Postgres 가 23505 를 반환하고,
--- components/CategoryInput.js 가 이를 "이미 존재하는 카테고리입니다." 로 표시합니다.
+-- lib/category-actions.js 가 기존 행을 찾아 그대로 선택시켜 줍니다.
 create unique index if not exists categories_name_lower_key
     on public.categories (lower(name));
 
 drop policy if exists categories_select on public.categories;
+drop policy if exists categories_insert on public.categories;
+drop policy if exists categories_update_own on public.categories;
+drop policy if exists categories_delete_own on public.categories;
+
+-- 이전 리비전에서 잠깐 쓰던 컬럼. owner_id 와 역할이 겹쳐 제거합니다.
+-- (위에서 참조 정책을 먼저 지웠기 때문에 여기서 안전하게 드롭됩니다)
+alter table public.categories drop column if exists created_by;
+
+-- 조회는 승인된 사용자 모두에게 열려 있습니다 (공용 사전).
 create policy categories_select on public.categories
     for select
     to authenticated
@@ -431,7 +450,6 @@ create policy categories_select on public.categories
         )
     );
 
-drop policy if exists categories_insert on public.categories;
 create policy categories_insert on public.categories
     for insert
     to authenticated
@@ -440,21 +458,21 @@ create policy categories_insert on public.categories
             select 1 from public.profiles p
             where p.id = auth.uid() and p.is_approved = true
         )
+        and owner_id = auth.uid()
     );
 
 -- 이름 수정/삭제는 만든 사람만.
-drop policy if exists categories_update_own on public.categories;
 create policy categories_update_own on public.categories
     for update
     to authenticated
-    using (created_by = auth.uid())
-    with check (created_by = auth.uid());
+    using (owner_id = auth.uid())
+    with check (owner_id = auth.uid());
 
-drop policy if exists categories_delete_own on public.categories;
 create policy categories_delete_own on public.categories
     for delete
     to authenticated
-    using (created_by = auth.uid());
+    using (owner_id = auth.uid());
+
 
 
 -- ----- question_set_categories  (문제집 ↔ 카테고리) ----------------------------
