@@ -1,7 +1,7 @@
 -- =============================================================================
 -- my-interview  |  Supabase schema (Postgres + Row Level Security)
 -- Features: 001-question-viewer + 002-signup-approval-redesign +
---           005-question-file-uploads
+--           005-question-file-uploads + 006-categories
 --
 -- How to apply:
 --   1. Open your Supabase project → SQL Editor → New query.
@@ -10,7 +10,8 @@
 --      create policy` patterns and are idempotent.
 --
 -- WHAT THIS FILE DEFINES
---   - Tables:   profiles (with is_approved), question_sets, questions
+--   - Tables:   profiles (with is_approved), question_sets, questions,
+--               categories + question_set_categories + question_categories
 --   - Trigger:  auto-update `updated_at` on question_sets & questions
 --   - RLS:      enabled on all three tables; policies enforce ownership,
 --               public/private visibility, AND approved-user gating on the
@@ -385,3 +386,207 @@ create policy question_files_delete on storage.objects
 --   Existing rows have is_approved = true after the backfill runs
 --   Authentication → Policies shows the updated policies on question_sets/questions
 -- =============================================================================
+
+
+-- =============================================================================
+-- 006: 카테고리 (categories + 두 개의 조인 테이블) & questions."order"
+--
+-- categories 는 모든 승인된 사용자가 공유하는 전역 태그 사전입니다.
+-- 문제집(question_set_categories)과 문제(question_categories)에 N:M 으로 붙습니다.
+-- 조인 테이블의 RLS 는 각각 question_sets / questions 의 정책을 그대로 따라갑니다.
+-- =============================================================================
+
+-- ----- questions."order" -----------------------------------------------------
+-- lib/queries.js / lib/question-actions.js 가 정렬·재정렬에 사용합니다.
+alter table public.questions
+    add column if not exists "order" integer not null default 0;
+
+create index if not exists questions_set_order_idx
+    on public.questions (question_set_id, "order");
+
+
+-- ----- categories -------------------------------------------------------------
+create table if not exists public.categories (
+    id          uuid primary key default gen_random_uuid(),
+    name        text not null,
+    created_by  uuid references public.profiles(id) on delete set null default auth.uid(),
+    created_at  timestamptz not null default now(),
+    constraint categories_name_len_chk check (char_length(name) between 1 and 50)
+);
+alter table public.categories enable row level security;
+
+-- 대소문자만 다른 중복을 막습니다. 위반 시 Postgres 가 23505 를 반환하고,
+-- components/CategoryInput.js 가 이를 "이미 존재하는 카테고리입니다." 로 표시합니다.
+create unique index if not exists categories_name_lower_key
+    on public.categories (lower(name));
+
+drop policy if exists categories_select on public.categories;
+create policy categories_select on public.categories
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+    );
+
+drop policy if exists categories_insert on public.categories;
+create policy categories_insert on public.categories
+    for insert
+    to authenticated
+    with check (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+    );
+
+-- 이름 수정/삭제는 만든 사람만.
+drop policy if exists categories_update_own on public.categories;
+create policy categories_update_own on public.categories
+    for update
+    to authenticated
+    using (created_by = auth.uid())
+    with check (created_by = auth.uid());
+
+drop policy if exists categories_delete_own on public.categories;
+create policy categories_delete_own on public.categories
+    for delete
+    to authenticated
+    using (created_by = auth.uid());
+
+
+-- ----- question_set_categories  (문제집 ↔ 카테고리) ----------------------------
+create table if not exists public.question_set_categories (
+    question_set_id uuid not null references public.question_sets(id) on delete cascade,
+    category_id     uuid not null references public.categories(id)    on delete cascade,
+    created_at      timestamptz not null default now(),
+    primary key (question_set_id, category_id)
+);
+alter table public.question_set_categories enable row level security;
+
+create index if not exists question_set_categories_category_idx
+    on public.question_set_categories (category_id);
+
+drop policy if exists question_set_categories_select on public.question_set_categories;
+create policy question_set_categories_select on public.question_set_categories
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = question_set_categories.question_set_id
+              and (s.owner_id = auth.uid() or s.is_public = true)
+        )
+    );
+
+drop policy if exists question_set_categories_insert on public.question_set_categories;
+create policy question_set_categories_insert on public.question_set_categories
+    for insert
+    to authenticated
+    with check (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = question_set_categories.question_set_id
+              and s.owner_id = auth.uid()
+        )
+    );
+
+drop policy if exists question_set_categories_delete on public.question_set_categories;
+create policy question_set_categories_delete on public.question_set_categories
+    for delete
+    to authenticated
+    using (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.question_sets s
+            where s.id = question_set_categories.question_set_id
+              and s.owner_id = auth.uid()
+        )
+    );
+
+
+-- ----- question_categories  (문제 ↔ 카테고리) ---------------------------------
+create table if not exists public.question_categories (
+    question_id  uuid not null references public.questions(id)  on delete cascade,
+    category_id  uuid not null references public.categories(id) on delete cascade,
+    created_at   timestamptz not null default now(),
+    primary key (question_id, category_id)
+);
+alter table public.question_categories enable row level security;
+
+create index if not exists question_categories_category_idx
+    on public.question_categories (category_id);
+
+drop policy if exists question_categories_select on public.question_categories;
+create policy question_categories_select on public.question_categories
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.questions q
+            join public.question_sets s on s.id = q.question_set_id
+            where q.id = question_categories.question_id
+              and (s.owner_id = auth.uid() or s.is_public = true)
+        )
+    );
+
+drop policy if exists question_categories_insert on public.question_categories;
+create policy question_categories_insert on public.question_categories
+    for insert
+    to authenticated
+    with check (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.questions q
+            join public.question_sets s on s.id = q.question_set_id
+            where q.id = question_categories.question_id
+              and s.owner_id = auth.uid()
+        )
+    );
+
+drop policy if exists question_categories_delete on public.question_categories;
+create policy question_categories_delete on public.question_categories
+    for delete
+    to authenticated
+    using (
+        exists (
+            select 1 from public.profiles p
+            where p.id = auth.uid() and p.is_approved = true
+        )
+        and exists (
+            select 1 from public.questions q
+            join public.question_sets s on s.id = q.question_set_id
+            where q.id = question_categories.question_id
+              and s.owner_id = auth.uid()
+        )
+    );
+
+
+-- ----- 006 grants -------------------------------------------------------------
+-- Supabase 의 기본 권한(default privileges)이 적용되지 않은 채 테이블이 만들어진
+-- 경우(예: 다른 롤로 미리 생성) PostgREST 가 RLS 이전 단계에서 403
+-- "permission denied for table" 을 돌려줍니다. 명시적으로 부여해 둡니다.
+-- 실제 접근 제어는 위의 RLS 정책이 담당합니다.
+grant select, insert, update, delete on public.categories              to authenticated;
+grant select, insert,         delete on public.question_set_categories to authenticated;
+grant select, insert,         delete on public.question_categories     to authenticated;

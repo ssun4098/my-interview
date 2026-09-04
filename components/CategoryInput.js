@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createBrowserSupabase } from '@/lib/supabase-browser';
+import { listCategories, createCategory } from '@/lib/category-actions';
 import { CloseIcon, PlusIcon } from '@/components/icons';
 
 export default function CategoryInput({ initial = [] }) {
@@ -9,6 +9,7 @@ export default function CategoryInput({ initial = [] }) {
   const [availableCategories, setAvailableCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
@@ -18,59 +19,50 @@ export default function CategoryInput({ initial = [] }) {
     fetchCategories();
   }, []);
 
+  // 조회/생성 모두 Server Action 을 거칩니다. 브라우저 Supabase 클라이언트로
+  // 직접 호출하면 세션이 실리지 않아 anon 롤이 되고, categories 의 RLS 정책이
+  // authenticated 대상이라 조회는 빈 배열, 생성은 42501 로 막힙니다.
   async function fetchCategories() {
     setIsLoading(true);
     try {
-      const supabase = createBrowserSupabase();
-      const { data, error: fetchError } = await supabase
-        .from('categories')
-        .select('id, name')
-        .order('name', { ascending: true });
-
-      if (fetchError) {
-        console.error('카테고리 조회 실패:', fetchError);
-        setAvailableCategories([]);
-        return;
-      }
-
-      setAvailableCategories(data ?? []);
+      const { categories: fetched, error: fetchError } = await listCategories();
+      if (fetchError) setError(fetchError);
+      setAvailableCategories(fetched ?? []);
     } finally {
       setIsLoading(false);
     }
   }
 
   async function handleAddNewCategory() {
-    if (!newCategoryName.trim()) {
+    const name = newCategoryName.trim();
+    if (!name) {
       setError('카테고리 이름을 입력해주세요.');
       return;
     }
+    if (isCreating) return;
 
+    setIsCreating(true);
     try {
-      const supabase = createBrowserSupabase();
-      const { data, error: createError } = await supabase
-        .from('categories')
-        .insert([{ name: newCategoryName.trim() }])
-        .select('id, name');
+      const result = await createCategory(name);
 
-      if (createError) {
-        if (createError.code === '23505') {
-          setError('이미 존재하는 카테고리입니다.');
-        } else {
-          setError('카테고리 생성에 실패했습니다.');
-        }
+      if (result.error) {
+        setError(result.error);
         return;
       }
 
-      if (data && data[0]) {
-        const newCategory = data[0];
-        setAvailableCategories([...availableCategories, newCategory]);
-        addCategory(newCategory);
-        setNewCategoryName('');
-        setError(null);
-      }
+      const newCategory = result.category;
+      // 이미 있던 카테고리면 목록에 중복으로 넣지 않고 선택만 합니다.
+      setAvailableCategories((prev) =>
+        prev.some((c) => c.id === newCategory.id) ? prev : [...prev, newCategory],
+      );
+      addCategory(newCategory);
+      setNewCategoryName('');
+      setError(null);
     } catch (err) {
-      console.error('에러:', err);
+      console.error('카테고리 생성 중 오류:', err);
       setError('카테고리 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsCreating(false);
     }
   }
 
@@ -174,6 +166,7 @@ export default function CategoryInput({ initial = [] }) {
             type="button"
             onClick={handleAddNewCategory}
             onMouseDown={(e) => e.preventDefault()}
+            disabled={isCreating}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -183,7 +176,8 @@ export default function CategoryInput({ initial = [] }) {
               border: 'none',
               background: 'transparent',
               color: 'var(--color-primary)',
-              cursor: 'pointer',
+              cursor: isCreating ? 'default' : 'pointer',
+              opacity: isCreating ? 0.5 : 1,
               padding: 0,
             }}
           >
