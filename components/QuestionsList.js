@@ -62,153 +62,181 @@ export default function QuestionsList({ setId, questions, isOwner }) {
     setDraggedIdx(idx);
   }
 
+  if (!items || items.length === 0) {
+    return (
+      <Card padding="var(--space-5)" style={{ textAlign: 'center' }}>
+        <p className="muted">아직 문제가 없습니다.</p>
+      </Card>
+    );
+  }
+
   return (
     <>
-      {!items || items.length === 0 ? (
-        <Card padding="var(--space-5)" style={{ textAlign: 'center' }}>
-          <p className="muted">아직 문제가 없습니다.</p>
-        </Card>
-      ) : (
-        <>
-          <ul
+      <ul
+        style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+          gap: 'var(--space-3)',
+          opacity: isSaving ? 0.6 : 1,
+          transition: 'opacity 200ms',
+        }}
+      >
+        {items.map((q, idx) => (
+          <li
+            key={q.id}
+            draggable={isOwner}
+            onDragStart={() => handleDragStart(idx)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              handleDragOver(idx);
+            }}
+            onDragEnd={handleDragEnd}
+            onDragLeave={() => {
+              dragOverIdx.current = null;
+            }}
             style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-2)',
-              opacity: isSaving ? 0.6 : 1,
-              transition: 'opacity 200ms',
+              cursor: isOwner ? 'grab' : 'default',
+              opacity: draggedIdx === idx ? 0.5 : 1,
+              transition: 'opacity 150ms, background 150ms',
             }}
           >
-            {items.map((q, idx) => (
-              <li
-                key={q.id}
-                draggable={isOwner}
-                onDragStart={() => handleDragStart(idx)}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  handleDragOver(idx);
-                }}
-                onDragEnd={handleDragEnd}
-                onDragLeave={() => {
-                  dragOverIdx.current = null;
-                }}
-                style={{
-                  cursor: isOwner ? 'grab' : 'default',
-                  opacity: draggedIdx === idx ? 0.5 : 1,
-                  transition: 'opacity 150ms, background 150ms',
-                }}
-              >
-                <Card
-                  padding="var(--space-3) var(--space-4)"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 'var(--space-3)',
-                    background: draggedIdx === idx ? 'var(--color-bg-subtle)' : 'var(--color-bg-surface)',
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    {isOwner && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 24,
-                          height: 24,
-                          cursor: 'grab',
-                          color: 'var(--color-fg-3)',
-                          fontSize: 14,
-                          fontWeight: 600,
-                        }}
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        ⋮
-                      </div>
-                    )}
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 600,
-                          color: 'var(--color-fg-1)',
-                        }}
-                      >
-                        <span
-                          style={{ color: 'var(--color-fg-3)', marginRight: 6, fontWeight: 500 }}
-                        >
-                          {idx + 1}.
-                        </span>
-                        {q.title}
-                      </div>
-                      <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
-                        {q.categories && q.categories.length > 0 && (
-                          q.categories.map(cat => (
-                            <span
-                              key={cat.id}
-                              style={{
-                                display: 'inline-block',
-                                padding: '2px 6px',
-                                borderRadius: 'var(--radius-sm)',
-                                background: 'var(--color-primary-tint)',
-                                color: 'var(--color-primary)',
-                                fontSize: 11,
-                                fontWeight: 500,
-                              }}
-                            >
-                              {cat.name}
-                            </span>
-                          ))
-                        )}
-                        {q.keywords && q.keywords.length > 0 && (
-                          <span className="muted" style={{ fontSize: 11, marginLeft: 'auto' }}>
-                            키워드 {q.keywords.length}개
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {isOwner && (
-                    <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-                      <Link
-                        href={`/sets/${setId}/questions/${q.id}/edit`}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <Button variant="ghost" size="sm">
-                          <EditIcon size={14} />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        type="button"
-                        onClick={() => handleDeleteQuestion(q.id)}
-                      >
-                        <TrashIcon size={14} />
-                      </Button>
-                    </div>
-                  )}
-                </Card>
-              </li>
-            ))}
-          </ul>
-          {isSaving && (
-            <div
+            <Card
+              padding="var(--space-4)"
               style={{
-                marginTop: 'var(--space-3)',
-                fontSize: 13,
-                color: 'var(--color-fg-3)',
-                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-3)',
+                height: '100%',
+                background: draggedIdx === idx ? 'var(--color-bg-subtle)' : 'var(--color-bg-surface)',
               }}
             >
-              순서 저장 중…
-            </div>
-          )}
-        </>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 'var(--space-2)',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 22,
+                    height: 22,
+                    padding: '0 6px',
+                    borderRadius: 'var(--radius-pill)',
+                    background: 'var(--color-bg-subtle)',
+                    color: 'var(--color-fg-3)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  {idx + 1}
+                </span>
+                {isOwner && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 24,
+                      height: 20,
+                      cursor: 'grab',
+                      color: 'var(--color-fg-3)',
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    aria-label="드래그하여 순서 변경"
+                  >
+                    ⋮⋮
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: 'var(--color-fg-1)',
+                  lineHeight: 1.4,
+                  flex: 1,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {q.title}
+              </div>
+
+              {(q.categories?.length > 0 || q.keywords?.length > 0) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
+                  {q.categories?.map(cat => (
+                    <span
+                      key={cat.id}
+                      style={{
+                        display: 'inline-block',
+                        padding: '2px 6px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'var(--color-primary-tint)',
+                        color: 'var(--color-primary)',
+                        fontSize: 11,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {cat.name}
+                    </span>
+                  ))}
+                  {q.keywords?.length > 0 && (
+                    <span className="muted" style={{ fontSize: 11 }}>
+                      키워드 {q.keywords.length}개
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {isOwner && (
+                <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'auto', paddingTop: 'var(--space-1)' }}>
+                  <Link
+                    href={`/sets/${setId}/questions/${q.id}/edit`}
+                    style={{ textDecoration: 'none', flex: 1 }}
+                  >
+                    <Button variant="ghost" size="sm" fullWidth>
+                      <EditIcon size={14} />
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleDeleteQuestion(q.id)}
+                    fullWidth
+                  >
+                    <TrashIcon size={14} />
+                  </Button>
+                </div>
+              )}
+            </Card>
+          </li>
+        ))}
+      </ul>
+      {isSaving && (
+        <div
+          style={{
+            marginTop: 'var(--space-3)',
+            fontSize: 13,
+            color: 'var(--color-fg-3)',
+            textAlign: 'center',
+          }}
+        >
+          순서 저장 중…
+        </div>
       )}
     </>
   );

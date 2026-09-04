@@ -198,6 +198,15 @@ export function ImageIcon({ size = 16 }) {
   );
 }
 
+export function SearchIcon({ size = 16 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
 export function TableIcon({ size = 16 }) {
   return (
     <svg {...svgProps({ size })}>
