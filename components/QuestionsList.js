@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import { EditIcon, TrashIcon } from '@/components/icons';
+import { EditIcon, TrashIcon, PlayIcon } from '@/components/icons';
 import { updateQuestionsOrder, deleteQuestion } from '@/lib/question-actions';
 
 export default function QuestionsList({ setId, questions, isOwner }) {
@@ -109,11 +109,12 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                flexWrap: 'wrap',
                 gap: 'var(--space-3)',
                 background: draggedIdx === idx ? 'var(--color-bg-subtle)' : 'var(--color-bg-surface)',
               }}
             >
-              <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <div style={{ minWidth: 0, flex: '1 1 200px', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 {isOwner && (
                   <div
                     style={{
@@ -173,26 +174,60 @@ export default function QuestionsList({ setId, questions, isOwner }) {
                   </div>
                 </div>
               </div>
-              {isOwner && (
-                <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-                  <Link
-                    href={`/sets/${setId}/questions/${q.id}/edit`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="ghost" size="sm">
-                      <EditIcon size={14} />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    type="button"
-                    onClick={() => handleDeleteQuestion(q.id)}
-                  >
-                    <TrashIcon size={14} />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-1)',
+                  marginLeft: 'auto',
+                  flexWrap: 'wrap',
+                }}
+              >
+                {/* 이 문제부터 시작. draggable={false} 를 주지 않으면 링크의 기본
+                    드래그가 li 의 순서 변경 드래그를 가로챕니다. */}
+                <Link
+                  href={`/sets/${setId}/study?mode=study&q=${q.id}`}
+                  draggable={false}
+                  title="이 문제부터 학습"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Button variant="ghost" size="sm">
+                    <PlayIcon size={11} />
+                    학습
                   </Button>
-                </div>
-              )}
+                </Link>
+                <Link
+                  href={`/sets/${setId}/study?mode=memorize&q=${q.id}`}
+                  draggable={false}
+                  title="이 문제부터 암기"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Button variant="ghost" size="sm">
+                    <PlayIcon size={11} />
+                    암기
+                  </Button>
+                </Link>
+                {isOwner && (
+                  <>
+                    <Link
+                      href={`/sets/${setId}/questions/${q.id}/edit`}
+                      draggable={false}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Button variant="ghost" size="sm">
+                        <EditIcon size={14} />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      type="button"
+                      onClick={() => handleDeleteQuestion(q.id)}
+                    >
+                      <TrashIcon size={14} />
+                    </Button>
+                  </>
+                )}
+              </div>
             </Card>
           </li>
         ))}

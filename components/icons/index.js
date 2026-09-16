@@ -100,6 +100,14 @@ export function PlusIcon({ size = 24 }) {
   );
 }
 
+export function PlayIcon({ size = 24 }) {
+  return (
+    <svg {...svgProps({ size })}>
+      <polygon points="6 4 19 12 6 20" />
+    </svg>
+  );
+}
+
 export function ChevronRightIcon({ size = 24 }) {
   return (
     <svg {...svgProps({ size })}>
